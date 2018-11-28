@@ -24,7 +24,7 @@ class parametri:
     dimensiuneTexturaSintetizata = (texturaInitiala.shape[0] * multiplier,
                                     texturaInitiala.shape[1] * multiplier)
 
-    dimensiuneBloc = 36
+    dimensiuneBloc = 36*2
     nrBlocuri = 2000
     eroareTolerata = 0.1
     portiuneSuprapunere = 1/6
@@ -33,6 +33,8 @@ class parametri:
     # 'frontieraMinima'
     metodaSinteza = 'frontieraMinima'
 
+    # limita recursivitate (valori mari => poate rula pe blocuri mari)
+    recLimit = 20100
 
 def genereazaNume():
 

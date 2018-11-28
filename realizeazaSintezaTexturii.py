@@ -11,7 +11,7 @@ import math
 from itertools import product
 from functiiSintezaTextura import (calculeazaDistanta,
                                    gasesteDrumMinim, floodFill)
-
+from sys import setrecursionlimit, getrecursionlimit
 
 def realizeazaSintezaTexturii(parametri):
 
@@ -77,6 +77,8 @@ def realizeazaSintezaTexturii(parametri):
         dimY = nrBlocuriY * (dimBloc - dimSuprapunere) + dimSuprapunere
         dimX = nrBlocuriX * (dimBloc - dimSuprapunere) + dimSuprapunere
         imgSintetizata = np.zeros((dimY, dimX, c), np.uint8)
+        EY = np.empty((dimSuprapunere, dimBloc), np.uint16)
+        EX = np.empty((dimBloc, dimSuprapunere), np.uint16)
 
         for y, x in product(range(nrBlocuriY), range(nrBlocuriX)):
 
@@ -232,8 +234,11 @@ def realizeazaSintezaTexturii(parametri):
                         if mascaSuprapunere[i, j] == 2:
                             mascaSuprapunere[i, j] = 1
 
+                current = getrecursionlimit()
+                setrecursionlimit(parametri.recLimit)
                 # Umple cu 1 partea care urmeaza sa fie scrisa
                 floodFill(mascaSuprapunere, dimBloc-1, dimBloc-1)
+                setrecursionlimit(current)
 
                 # partea de suprapus a imaginii sintetizate pana acum
                 old = imgSintetizata[startY:endY, startX:endX, :]
