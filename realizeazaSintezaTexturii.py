@@ -205,9 +205,10 @@ def realizeazaSintezaTexturii(parametri):
                     for i in range(dimBloc):
                         mascaSuprapunere[i, drumMinimX[i]] += 1
 
-                copie2 =  np.copy(mascaSuprapunere)
                 if x and y:
 
+                    # adaugam 2 si in zona in care drumurile se
+                    # intersecteaza pe diagonala
                     for i, j in product(
                             range(dimSuprapunere+1), range(dimSuprapunere+1)):
                         if (mascaSuprapunere[i][j]
@@ -220,6 +221,7 @@ def realizeazaSintezaTexturii(parametri):
                                 mascaSuprapunere[i][j+1] = 2
                                 mascaSuprapunere[i+1][j+1] = 2
 
+                    # stergem drumul y pana la intersectia cu x
                     for i in range(dimBloc):
                         j = drumMinimY[i]
                         if mascaSuprapunere[j, i] == 2:
@@ -228,6 +230,7 @@ def realizeazaSintezaTexturii(parametri):
                         else:
                             mascaSuprapunere[j, i] = 0
 
+                    # stergem drumul x pana la intersectia cu y
                     for i in range(dimBloc):
                         j = drumMinimX[i]
                         if mascaSuprapunere[i, j] == 2:
@@ -236,6 +239,7 @@ def realizeazaSintezaTexturii(parametri):
                         else:
                             mascaSuprapunere[i, j] = 0
 
+                    # inlocuim 2 urile cu 1
                     for i in range(indY, dimBloc):
                         j = drumMinimY[i]
                         if mascaSuprapunere[j, i] == 2:
@@ -251,14 +255,10 @@ def realizeazaSintezaTexturii(parametri):
                     current = getrecursionlimit()
                     setrecursionlimit(parametri.recLimit)
                 # Umple cu 1 partea care urmeaza sa fie scrisa
-                copie =  np.copy(mascaSuprapunere)
                 floodFill(mascaSuprapunere, dimBloc-1, dimBloc-1)
                 # restabileste limita de recursivitate
                 if parametri.recLimit != -1:
                     setrecursionlimit(current)
-
-                if mascaSuprapunere[0, 0] == 1:
-                    print('Why')
 
                 # partea de suprapus a imaginii sintetizate pana acum
                 old = texturaSintetizata[startY:endY, startX:endX, :]
