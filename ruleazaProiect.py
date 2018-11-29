@@ -7,7 +7,7 @@ Created on Sat Nov 24 21:18:26 2018
 """
 import cv2
 from realizeazaSintezaTexturii import realizeazaSintezaTexturii
-#from realizeazaTransferulTexturii import realizeazaTransferulTexturii
+from realizeazaTransferulTexturii import realizeazaTransferulTexturii
 
 
 class parametri:
@@ -23,14 +23,15 @@ class parametri:
     tipImg = 'jpg'
     caleImg = caleTextura
     # citeste imaginea
-    imagine = cv2.imread(caleImg + numeImg + '.' + tipImg)
+    img = cv2.imread(caleImg + numeImg + '.' + tipImg)
 
     # de cate ori o sa fie marita imaginea
     multiplier = 2
+    # dimensiunea texturii sintetizata fara suprapunere
     dimensiuneTexturaSintetizata = (textura.shape[0] * multiplier,
                                     textura.shape[1] * multiplier)
 
-    dimensiuneBloc = 36
+    dimensiuneBloc = 120
     nrBlocuri = 2000
     eroareTolerata = 0.1
     portiuneSuprapunere = 1/6
@@ -40,7 +41,7 @@ class parametri:
     metodaSinteza = 'frontieraMinima'
 
     # nr de iteratii pentru transferul texturii
-    nrIteratii = 3
+    nrIteratii = 5
 
     # limita recursivitate
     # valori mari(ex: 20100) => poate rula pe blocuri mari
@@ -91,9 +92,10 @@ def genereazaNumeTexturaTransferata():
     return nume
 
 
+# generam imaginiile
 texturaSintetizata = realizeazaSintezaTexturii(parametri)
-#texturaTransferata = realizeazaTransferulTexturii(parametri)
+texturaTransferata = realizeazaTransferulTexturii(parametri)
 
 # scriem imaginiile
 cv2.imwrite(genereazaNumeTexturaSintetizata(), texturaSintetizata)
-#cv2.imwrite(genereazaNumeTexturaTransferata(), texturaTransferata)
+cv2.imwrite(genereazaNumeTexturaTransferata(), texturaTransferata)

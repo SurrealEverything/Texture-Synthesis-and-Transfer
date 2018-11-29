@@ -8,9 +8,10 @@ Created on Sat Nov 24 21:17:56 2018
 import numpy as np
 import math
 from itertools import product
-from functiiSintezaTextura import (calculeazaDistanta,
-                                   gasesteDrumMinim, floodFill)
 from sys import setrecursionlimit, getrecursionlimit
+from functiiUtile import (genereazaBlocuri, calculeazaDistantaSuprapunere,
+                          gasesteDrumMinim, floodFill)
+
 
 
 def realizeazaSintezaTexturii(parametri):
@@ -18,41 +19,25 @@ def realizeazaSintezaTexturii(parametri):
     dimBloc = parametri.dimensiuneBloc
     nrBlocuri = parametri.nrBlocuri
 
-    H, W, c = parametri.textura.shape
-    H2 = parametri.dimensiuneTexturaSintetizata[0]
-    W2 = parametri.dimensiuneTexturaSintetizata[1]
+    HT = parametri.dimensiuneTexturaSintetizata[0]
+    WT = parametri.dimensiuneTexturaSintetizata[1]
 
     eroareTolerata = parametri.eroareTolerata + 1
 
     dimSuprapunere = math.floor(parametri.portiuneSuprapunere * dimBloc)
 
-    # o imagine este o matrice cu 3 dimensiuni: inaltime x latime x nrCanale
-    # variabila blocuri - matrice cu 4 dimensiuni: punem fiecare bloc
-    # (portiune din textura initiala) unul peste altul
-    blocuri = np.empty((dimBloc, dimBloc, c, nrBlocuri), np.uint8)
-
-    # selecteaza blocuri aleatoare din textura initiala
-    # genereaza (in maniera vectoriala) punctul din stanga sus al blocurilor
-    y = np.random.randint(H-dimBloc, size=nrBlocuri)
-    x = np.random.randint(W-dimBloc, size=nrBlocuri)
-
-    # extrage portiunea din textura initiala continand blocul
-    for i in range(nrBlocuri):
-        blocuri[:, :, :, i] = parametri.textura[
-                y[i] : y[i] + dimBloc,
-                x[i] : x[i] + dimBloc,
-                :]
+    blocuri = genereazaBlocuri(parametri.textura, nrBlocuri,  dimBloc)
 
     # aflam numarul de blocuri pentru imaginea mare
-    nrBlocuriY = math.ceil(H2 / dimBloc)
-    nrBlocuriX = math.ceil(W2 / dimBloc)
+    nrBlocuriY = math.ceil(HT / dimBloc)
+    nrBlocuriX = math.ceil(WT / dimBloc)
 
     if parametri.metodaSinteza == 'blocuriAleatoare':
         # completeaza imaginea de obtinut cu blocuri aleatoare
 
-        texturaSintetizata = np.empty((H2, W2, c), np.uint8)
+        texturaSintetizata = np.empty((HT, WT, 3), np.uint8)
         texturaSintetizataMaiMare = np.empty(
-            (nrBlocuriY * dimBloc, nrBlocuriX * dimBloc, c),
+            (nrBlocuriY * dimBloc, nrBlocuriX * dimBloc, 3),
             np.uint8)
 
         for y, x in product(range(nrBlocuriY), range(nrBlocuriX)):
@@ -67,7 +52,7 @@ def realizeazaSintezaTexturii(parametri):
                 :] = blocuri[:, :, :, indice]
 
         # cropam imaginea mare la dimensiunea dorita
-        texturaSintetizata = texturaSintetizataMaiMare[:H2, :W2, :]
+        texturaSintetizata = texturaSintetizataMaiMare[:HT, :WT, :]
 
     else:
         # completeaza imaginea de obtinut cu blocuri ales
@@ -76,7 +61,7 @@ def realizeazaSintezaTexturii(parametri):
         # calculam dimensiunile imaginii tinand cont de suprapunere
         dimY = nrBlocuriY * (dimBloc - dimSuprapunere) + dimSuprapunere
         dimX = nrBlocuriX * (dimBloc - dimSuprapunere) + dimSuprapunere
-        texturaSintetizata = np.zeros((dimY, dimX, c), np.uint8)
+        texturaSintetizata = np.zeros((dimY, dimX, 3), np.uint8)
 
         for y, x in product(range(nrBlocuriY), range(nrBlocuriX)):
 
@@ -106,8 +91,8 @@ def realizeazaSintezaTexturii(parametri):
 
                 # aflam distanta pentru portiunea suprapusa orizontal dintre
                 # imaginea sintetizata pana acum si toate celelalte blocuri
-                distanteY = calculeazaDistanta(blocuri, suprapunereImagineY,
-                                               dimSuprapunere, 'Y')
+                distanteY = calculeazaDistantaSuprapunere(
+                            blocuri, suprapunereImagineY, dimSuprapunere, 'Y')
 
             if x:
                 # calculam suprapunerea verticala
@@ -118,8 +103,8 @@ def realizeazaSintezaTexturii(parametri):
 
                 # aflam distanta pentru portiunea suprapusa vertical dintre
                 # imaginea sintetizata pana acum si toate celelalte blocuri
-                distanteX = calculeazaDistanta(blocuri, suprapunereImagineX,
-                                               dimSuprapunere, 'X')
+                distanteX = calculeazaDistantaSuprapunere(
+                            blocuri, suprapunereImagineX, dimSuprapunere, 'X')
 
             if y and x:
                 # calculam suprapunerea comuna
@@ -130,8 +115,8 @@ def realizeazaSintezaTexturii(parametri):
 
                 # aflam distanta pentru portiunea suprapusa diagonal dintre
                 # imaginea sintetizata pana acum si toate celelalte blocuri
-                distanteXY = calculeazaDistanta(blocuri, suprapunereImagineXY,
-                                                dimSuprapunere, 'XY')
+                distanteXY = calculeazaDistantaSuprapunere(
+                            blocuri, suprapunereImagineXY, dimSuprapunere, 'XY')
 
             # distanta totala de suprapunere pentru fiecare bloc
             distante = np.zeros((nrBlocuri,))
@@ -178,8 +163,7 @@ def realizeazaSintezaTexturii(parametri):
                     # partea verticala  a blocului care urmeaza sa suprapuna
                     newY = blocuri[:dimSuprapunere, :, :, indice]
                     # matricea de cost al fiecarei suprapuneri
-                    # EY = np.power((oldY - newY), 2)
-                    EY = np.absolute(oldY - newY)
+                    EY = np.power((oldY - newY), 2)
                     EY = EY[:, :, 0] + EY[:, :, 1] + EY[:, :, 2]
                     # frontiera de cost minim
                     drumMinimY = gasesteDrumMinim(EY)
@@ -196,8 +180,7 @@ def realizeazaSintezaTexturii(parametri):
                     # partea verticala  a blocului care urmeaza sa suprapuna
                     newX = blocuri[:, :dimSuprapunere, :, indice]
                     # matricea de cost al fiecarei suprapuneri
-                    # EX = np.power((oldX - newX), 2)
-                    EX = np.absolute(oldX - newX)
+                    EX = np.power((oldX - newX), 2)
                     EX = EX[:, :, 0] + EX[:, :, 1] + EX[:, :, 2]
                     # frontiera de cost minim
                     drumMinimX = gasesteDrumMinim(EX)
@@ -210,7 +193,7 @@ def realizeazaSintezaTexturii(parametri):
                     # adaugam 2 si in zona in care drumurile se
                     # intersecteaza pe diagonala
                     for i, j in product(
-                            range(dimSuprapunere+1), range(dimSuprapunere+1)):
+                            range(dimSuprapunere-1), range(dimSuprapunere-1)):
                         if (mascaSuprapunere[i][j]
                                 and mascaSuprapunere[i+1][j]
                                 and mascaSuprapunere[i][j+1]
