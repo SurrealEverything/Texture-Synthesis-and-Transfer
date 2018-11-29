@@ -6,19 +6,19 @@ Created on Sat Nov 24 21:17:56 2018
 @author: gabriel
 """
 import numpy as np
-import cv2
 import math
 from itertools import product
 from functiiSintezaTextura import (calculeazaDistanta,
                                    gasesteDrumMinim, floodFill)
 from sys import setrecursionlimit, getrecursionlimit
 
+
 def realizeazaSintezaTexturii(parametri):
 
     dimBloc = parametri.dimensiuneBloc
     nrBlocuri = parametri.nrBlocuri
 
-    H, W, c = parametri.texturaInitiala.shape
+    H, W, c = parametri.textura.shape
     H2 = parametri.dimensiuneTexturaSintetizata[0]
     W2 = parametri.dimensiuneTexturaSintetizata[1]
 
@@ -38,7 +38,7 @@ def realizeazaSintezaTexturii(parametri):
 
     # extrage portiunea din textura initiala continand blocul
     for i in range(nrBlocuri):
-        blocuri[:, :, :, i] = parametri.texturaInitiala[
+        blocuri[:, :, :, i] = parametri.textura[
                 y[i] : y[i] + dimBloc,
                 x[i] : x[i] + dimBloc,
                 :]
@@ -50,8 +50,8 @@ def realizeazaSintezaTexturii(parametri):
     if parametri.metodaSinteza == 'blocuriAleatoare':
         # completeaza imaginea de obtinut cu blocuri aleatoare
 
-        imgSintetizata = np.empty((H2, W2, c), np.uint8)
-        imgSintetizataMaiMare = np.empty(
+        texturaSintetizata = np.empty((H2, W2, c), np.uint8)
+        texturaSintetizataMaiMare = np.empty(
             (nrBlocuriY * dimBloc, nrBlocuriX * dimBloc, c),
             np.uint8)
 
@@ -61,13 +61,13 @@ def realizeazaSintezaTexturii(parametri):
             indice = np.random.randint(nrBlocuri)
 
             # adaugam acel bloc in imagine
-            imgSintetizataMaiMare[
+            texturaSintetizataMaiMare[
                 y * dimBloc : (y+1) * dimBloc,
                 x * dimBloc : (x+1) * dimBloc,
                 :] = blocuri[:, :, :, indice]
 
         # cropam imaginea mare la dimensiunea dorita
-        imgSintetizata = imgSintetizataMaiMare[:H2, :W2, :]
+        texturaSintetizata = texturaSintetizataMaiMare[:H2, :W2, :]
 
     else:
         # completeaza imaginea de obtinut cu blocuri ales
@@ -76,9 +76,7 @@ def realizeazaSintezaTexturii(parametri):
         # calculam dimensiunile imaginii tinand cont de suprapunere
         dimY = nrBlocuriY * (dimBloc - dimSuprapunere) + dimSuprapunere
         dimX = nrBlocuriX * (dimBloc - dimSuprapunere) + dimSuprapunere
-        imgSintetizata = np.zeros((dimY, dimX, c), np.uint8)
-        EY = np.empty((dimSuprapunere, dimBloc), np.uint16)
-        EX = np.empty((dimBloc, dimSuprapunere), np.uint16)
+        texturaSintetizata = np.zeros((dimY, dimX, c), np.uint8)
 
         for y, x in product(range(nrBlocuriY), range(nrBlocuriX)):
 
@@ -92,7 +90,7 @@ def realizeazaSintezaTexturii(parametri):
                 # daca e primul bloc, il alegem aleator
                 indice = np.random.randint(nrBlocuri)
 
-                imgSintetizata[
+                texturaSintetizata[
                     startY : endY,
                     startX : endX,
                     :] = blocuri[:, :, :, indice]
@@ -101,7 +99,7 @@ def realizeazaSintezaTexturii(parametri):
 
             if y:
                 # calculam suprapunerea orizontala
-                suprapunereImagineY = imgSintetizata[
+                suprapunereImagineY = texturaSintetizata[
                     startY : startY + dimSuprapunere,
                     startX : endX,
                     :]
@@ -113,7 +111,7 @@ def realizeazaSintezaTexturii(parametri):
 
             if x:
                 # calculam suprapunerea verticala
-                suprapunereImagineX = imgSintetizata[
+                suprapunereImagineX = texturaSintetizata[
                     startY : endY,
                     startX : startX + dimSuprapunere,
                     :]
@@ -125,7 +123,7 @@ def realizeazaSintezaTexturii(parametri):
 
             if y and x:
                 # calculam suprapunerea comuna
-                suprapunereImagineXY = imgSintetizata[
+                suprapunereImagineXY = texturaSintetizata[
                     startY : startY + dimSuprapunere,
                     startX : startX + dimSuprapunere,
                     :]
@@ -161,7 +159,7 @@ def realizeazaSintezaTexturii(parametri):
             if parametri.metodaSinteza == 'eroareSuprapunere':
                 # suprapunem blocurile in totalitate
 
-                imgSintetizata[
+                texturaSintetizata[
                         startY : endY,
                         startX : endX,
                         :] = blocuri[:, :, :, indice]
@@ -173,7 +171,7 @@ def realizeazaSintezaTexturii(parametri):
 
                 if y:
                     # partea orizontala de suprapus a imaginii
-                    oldY = imgSintetizata[
+                    oldY = texturaSintetizata[
                                 startY : startY + dimSuprapunere,
                                 startX : endX,
                                 :]
@@ -191,7 +189,7 @@ def realizeazaSintezaTexturii(parametri):
 
                 if x:
                     # partea orizontala de suprapus a imaginii
-                    oldX = imgSintetizata[
+                    oldX = texturaSintetizata[
                                 startY : endY,
                                 startX : startX + dimSuprapunere,
                                 :]
@@ -207,7 +205,21 @@ def realizeazaSintezaTexturii(parametri):
                     for i in range(dimBloc):
                         mascaSuprapunere[i, drumMinimX[i]] += 1
 
+                copie2 =  np.copy(mascaSuprapunere)
                 if x and y:
+
+                    for i, j in product(
+                            range(dimSuprapunere+1), range(dimSuprapunere+1)):
+                        if (mascaSuprapunere[i][j]
+                                and mascaSuprapunere[i+1][j]
+                                and mascaSuprapunere[i][j+1]
+                                and mascaSuprapunere[i+1][j+1]):
+
+                                mascaSuprapunere[i][j] = 2
+                                mascaSuprapunere[i+1][j] = 2
+                                mascaSuprapunere[i][j+1] = 2
+                                mascaSuprapunere[i+1][j+1] = 2
+
                     for i in range(dimBloc):
                         j = drumMinimY[i]
                         if mascaSuprapunere[j, i] == 2:
@@ -234,14 +246,22 @@ def realizeazaSintezaTexturii(parametri):
                         if mascaSuprapunere[i, j] == 2:
                             mascaSuprapunere[i, j] = 1
 
-                current = getrecursionlimit()
-                setrecursionlimit(parametri.recLimit)
+                # modifica limita de recursivitate
+                if parametri.recLimit != -1:
+                    current = getrecursionlimit()
+                    setrecursionlimit(parametri.recLimit)
                 # Umple cu 1 partea care urmeaza sa fie scrisa
+                copie =  np.copy(mascaSuprapunere)
                 floodFill(mascaSuprapunere, dimBloc-1, dimBloc-1)
-                setrecursionlimit(current)
+                # restabileste limita de recursivitate
+                if parametri.recLimit != -1:
+                    setrecursionlimit(current)
+
+                if mascaSuprapunere[0, 0] == 1:
+                    print('Why')
 
                 # partea de suprapus a imaginii sintetizate pana acum
-                old = imgSintetizata[startY:endY, startX:endX, :]
+                old = texturaSintetizata[startY:endY, startX:endX, :]
 
                 # blocul care urmeaza sa suprapuna imaginea
                 new = blocuri[:, :, :, indice]
@@ -260,8 +280,8 @@ def realizeazaSintezaTexturii(parametri):
                 new = new * mascaSuprapunere
                 rezultat = old + new
 
-                imgSintetizata[
+                texturaSintetizata[
                             startY : endY,
                             startX : endX,
                             :] = rezultat
-    return imgSintetizata
+    return texturaSintetizata

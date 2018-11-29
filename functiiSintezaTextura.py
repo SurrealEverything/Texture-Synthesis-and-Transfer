@@ -39,7 +39,7 @@ def gasesteDrumMinim(E):
     h, w = E.shape
     # daca suprapunerea este orizontala, rotim imaginea
     if h < w:
-        E = np.rot90(E)
+        E = np.rot90(E)#, 3)
         h, w = w, h
         rotit = 1
 

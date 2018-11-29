@@ -6,25 +6,31 @@ Created on Sat Nov 24 21:18:26 2018
 @author: gabriel
 """
 import cv2
-import numpy as np
 from realizeazaSintezaTexturii import realizeazaSintezaTexturii
+#from realizeazaTransferulTexturii import realizeazaTransferulTexturii
 
 
 class parametri:
-    # puteti inlocui numele imaginii
-    numeImg = 'radishes'
+    # numele, tipul si calea texturii
+    numeTextura = 'rice'
+    tipTextura = 'jpg'
+    caleTextura = '/home/gabriel/Spyder Projects/VA/Tema3/data/'
+    # citeste textura
+    textura = cv2.imread(caleTextura + numeTextura + '.' + tipTextura)
+
+    # numele, tipul si calea imaginii
+    numeImg = 'eminescu'
     tipImg = 'jpg'
-    # citeste imaginea care va fi transformata in mozaic
-    img = cv2.imread('/home/gabriel/Spyder Projects/VA/Tema3/data/'
-                     + numeImg + '.' + tipImg)
+    caleImg = caleTextura
+    # citeste imaginea
+    imagine = cv2.imread(caleImg + numeImg + '.' + tipImg)
 
-    texturaInitiala = np.array(img, copy=True)
-
+    # de cate ori o sa fie marita imaginea
     multiplier = 2
-    dimensiuneTexturaSintetizata = (texturaInitiala.shape[0] * multiplier,
-                                    texturaInitiala.shape[1] * multiplier)
+    dimensiuneTexturaSintetizata = (textura.shape[0] * multiplier,
+                                    textura.shape[1] * multiplier)
 
-    dimensiuneBloc = 36*2
+    dimensiuneBloc = 36
     nrBlocuri = 2000
     eroareTolerata = 0.1
     portiuneSuprapunere = 1/6
@@ -33,10 +39,16 @@ class parametri:
     # 'frontieraMinima'
     metodaSinteza = 'frontieraMinima'
 
-    # limita recursivitate (valori mari => poate rula pe blocuri mari)
+    # nr de iteratii pentru transferul texturii
+    nrIteratii = 3
+
+    # limita recursivitate
+    # valori mari(ex: 20100) => poate rula pe blocuri mari
+    # -1 => limita automata
     recLimit = 20100
 
-def genereazaNume():
+
+def genereazaNumeTexturaSintetizata():
 
     if parametri.metodaSinteza == 'blocuriAleatoare':
         sinteza = 'aleator'
@@ -52,12 +64,36 @@ def genereazaNume():
             + str(parametri.eroareTolerata) + '_'
             + str(format(parametri.portiuneSuprapunere, '.2f')))
 
-    nume = (parametri.numeImg + '_' + sinteza
+    nume = (parametri.numeTextura + '_' + sinteza
             + '_' + parametriNumerici + '.png')
     return nume
 
 
-imgSintetizata = realizeazaSintezaTexturii(parametri)
+def genereazaNumeTexturaTransferata():
 
-# scriem imaginea
-cv2.imwrite(genereazaNume(), imgSintetizata)
+    if parametri.metodaSinteza == 'blocuriAleatoare':
+        sinteza = 'aleator'
+    elif parametri.metodaSinteza == 'eroareSuprapunere':
+        sinteza = 'errSup'
+    else:
+        sinteza = 'frontMin'
+
+    parametriNumerici = (
+            str(parametri.multiplier) + '_'
+            + str(parametri.dimensiuneBloc) + '_'
+            + str(parametri.nrBlocuri) + '_'
+            + str(parametri.eroareTolerata) + '_'
+            + str(format(parametri.portiuneSuprapunere, '.2f'))
+            + str(parametri.nrIteratii))
+
+    nume = (parametri.numeImg + '_' + parametri.numeTextura + '_' + sinteza
+            + '_' + parametriNumerici + '.png')
+    return nume
+
+
+texturaSintetizata = realizeazaSintezaTexturii(parametri)
+#texturaTransferata = realizeazaTransferulTexturii(parametri)
+
+# scriem imaginiile
+cv2.imwrite(genereazaNumeTexturaSintetizata(), texturaSintetizata)
+#cv2.imwrite(genereazaNumeTexturaTransferata(), texturaTransferata)
