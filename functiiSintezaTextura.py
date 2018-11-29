@@ -25,10 +25,9 @@ def calculeazaDistanta(blocuri, suprapunereImagine, w, caz):
             b = blocuri[:w, :, :, i]
         elif caz == 'XY':
             b = blocuri[:w, :w, :, i]
-
         # calculam distanta euclidiana
-        distante[i] = np.linalg.norm(a-b)
-
+        # distante[i] = np.linalg.norm(a-b)
+        distante[i] = np.sqrt(np.sum(np.square(a-b)))
     return distante
 
 
@@ -39,7 +38,7 @@ def gasesteDrumMinim(E):
     h, w = E.shape
     # daca suprapunerea este orizontala, rotim imaginea
     if h < w:
-        E = np.rot90(E)#, 3)
+        E = np.rot90(E)
         h, w = w, h
         rotit = 1
 
