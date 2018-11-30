@@ -30,10 +30,9 @@ def realizeazaTransferulTexturii(parametri):
     dimYmin = inf
     dimXmin = inf
 
-    # calculam factorul cu care vom mari un bloc, pentru a
-    # compensa micsorarea ulterioara (intr-o limita de resurse)
-    factorMarire = 3
-    # factorMarire = (3 ** min(nrIteratii-1, 3))
+    # factorul cu care vom mari un bloc(intr-o limita de resurse), pentru a
+    # compensa micsorarea ulterioara
+    factorMarire = (3 ** min(nrIteratii-1, parametri.limitaMarire))
     dimBloc = parametri.dimensiuneBloc * factorMarire
     # daca textura initiala nu e suficient de mare
     if HT / dimBloc < 8:
@@ -42,6 +41,8 @@ def realizeazaTransferulTexturii(parametri):
         HTR = HT * factorMarire
         WTR = WT * factorMarire
         textura = cv2.resize(parametri.textura, (HTR, WTR), cv2.INTER_CUBIC)
+    else:
+        factorMarire = 1
 
     for iteratie in range(nrIteratii):
 
@@ -257,12 +258,15 @@ def realizeazaTransferulTexturii(parametri):
                         startX : endX,
                         :] = rezultat
 
-        if iteratie != nrIteratii:
+        if iteratie != nrIteratii-1:
             # actualizam dimensiunea blocului pentru urmatoarea iteratie
             dimBloc = math.floor(dimBloc/3)
-            # micsoram textura originala, pentru a avea blocuri proportionale
-            HTR = math.floor(HTR/3)
-            WTR = math.floor(WTR/3)
-            textura = cv2.resize(textura, (HTR, WTR), cv2.INTER_CUBIC)
+
+            if factorMarire > 1:
+                # micsoram textura originala, pentru a avea blocuri proportionale
+                HTR = math.floor(HTR/3)
+                WTR = math.floor(WTR/3)
+                textura = cv2.resize(textura, (HTR, WTR), cv2.INTER_CUBIC)
+            factorMarire = factorMarire/3
 
     return texturaTransferata[:dimYmin, :dimXmin, :]

@@ -31,7 +31,7 @@ class parametri:
     dimensiuneTexturaSintetizata = (textura.shape[0] * multiplier,
                                     textura.shape[1] * multiplier)
 
-    dimensiuneBloc = 50
+    dimensiuneBloc = 70
     nrBlocuri = 2000
     eroareTolerata = 0.1
     portiuneSuprapunere = 1/6
@@ -41,8 +41,12 @@ class parametri:
     metodaSinteza = 'frontieraMinima'
 
     # nr de iteratii pentru transferul texturii
-    nrIteratii = 4
-
+    nrIteratii = 3
+    # puterea lui 3 cu care sa se mareasca blocul si textura
+    # 0 => nici o marire
+    # 1 => imagini normale
+    # 2 => imagini mari
+    limitaMarire = 1
 
 def genereazaNumeTexturaSintetizata():
 
@@ -79,8 +83,9 @@ def genereazaNumeTexturaTransferata():
             + str(parametri.dimensiuneBloc) + '_'
             + str(parametri.nrBlocuri) + '_'
             + str(parametri.eroareTolerata) + '_'
-            + str(format(parametri.portiuneSuprapunere, '.2f'))
-            + str(parametri.nrIteratii))
+            + str(format(parametri.portiuneSuprapunere, '.2f') + '_')
+            + str(parametri.nrIteratii) + '_'
+            + str(parametri.limitaMarire))
 
     nume = (parametri.numeImg + '_' + parametri.numeTextura + '_' + sinteza
             + '_' + parametriNumerici + '.png')
@@ -88,9 +93,9 @@ def genereazaNumeTexturaTransferata():
 
 
 # generam imaginiile
-#texturaSintetizata = realizeazaSintezaTexturii(parametri)
+texturaSintetizata = realizeazaSintezaTexturii(parametri)
 texturaTransferata = realizeazaTransferulTexturii(parametri)
 
 # scriem imaginiile
-# cv2.imwrite(genereazaNumeTexturaSintetizata(), texturaSintetizata)
+cv2.imwrite(genereazaNumeTexturaSintetizata(), texturaSintetizata)
 cv2.imwrite(genereazaNumeTexturaTransferata(), texturaTransferata)
