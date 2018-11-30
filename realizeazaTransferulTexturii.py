@@ -6,31 +6,48 @@ Created on Thu Nov 29 14:29:21 2018
 @author: gabriel
 """
 import numpy as np
+import cv2
 import math
 from itertools import product
-from sys import setrecursionlimit, getrecursionlimit
 from functiiUtile import (genereazaBlocuri, calculeazaDistantaSuprapunere,
-                          gasesteDrumMinim, floodFill, calculeazaDistantaPatch)
+                          gasesteDrumMinim, floodFillIterativ,
+                          calculeazaDistantaPatch)
 
 
 def realizeazaTransferulTexturii(parametri):
 
-    dimBloc = parametri.dimensiuneBloc
+    nrIteratii = parametri.nrIteratii
+
+    HT, WT, c = parametri.textura.shape
+
     nrBlocuri = parametri.nrBlocuri
 
     HI, WI, c = parametri.img.shape
 
-    nrIteratii = parametri.nrIteratii
+    eroareTolerata = parametri.eroareTolerata + 1
 
     inf = np.iinfo(np.uint16).max
     dimYmin = inf
     dimXmin = inf
 
+    # calculam factorul cu care vom mari un bloc, pentru a
+    # compensa micsorarea ulterioara (intr-o limita de resurse)
+    factorMarire = 3
+    # factorMarire = (3 ** min(nrIteratii-1, 3))
+    dimBloc = parametri.dimensiuneBloc * factorMarire
+    # daca textura initiala nu e suficient de mare
+    if HT / dimBloc < 8:
+        # marim textura initiala, pentru a permite functionarea unui
+        # numar mai mare de iteratii
+        HTR = HT * factorMarire
+        WTR = WT * factorMarire
+        textura = cv2.resize(parametri.textura, (HTR, WTR), cv2.INTER_CUBIC)
+
     for iteratie in range(nrIteratii):
 
         dimSuprapunere = math.floor(parametri.portiuneSuprapunere * dimBloc)
 
-        blocuri = genereazaBlocuri(parametri.textura, nrBlocuri,  dimBloc)
+        blocuri = genereazaBlocuri(textura, nrBlocuri,  dimBloc)
 
         # aflam numarul de blocuri pentru imaginea mare
         nrBlocuriY = math.ceil(HI / dimBloc)
@@ -121,7 +138,15 @@ def realizeazaTransferulTexturii(parametri):
 
             distante = pondere * distante + (1-pondere) * intensitate
 
-            indice = distante.argmin()
+            # aflam distanta minima dintre toate distantele
+            bestMatch = distante.min()
+
+            # aflam o multime de indici cu o distanta aproapiata de cea minima
+            # cu scopul de a varia blocurile folosite
+            indici = np.flatnonzero(distante <= eroareTolerata * bestMatch)
+
+            # alegem aleator un indice din acea multime
+            indice = np.random.choice(indici)
 
             mascaSuprapunere = np.zeros((dimBloc, dimBloc), np.uint8)
 
@@ -204,15 +229,8 @@ def realizeazaTransferulTexturii(parametri):
                     if mascaSuprapunere[i, j] == 2:
                         mascaSuprapunere[i, j] = 1
 
-            # modifica limita de recursivitate
-            if parametri.recLimit != -1:
-                current = getrecursionlimit()
-                setrecursionlimit(parametri.recLimit)
             # Umple cu 1 partea care urmeaza sa fie scrisa
-            floodFill(mascaSuprapunere, dimBloc-1, dimBloc-1)
-            # restabileste limita de recursivitate
-            if parametri.recLimit != -1:
-                setrecursionlimit(current)
+            floodFillIterativ(mascaSuprapunere, dimBloc-1, dimBloc-1)
 
             # partea de suprapus a imaginii sintetizate pana acum
             old = texturaTransferata[startY:endY, startX:endX, :]
@@ -239,7 +257,12 @@ def realizeazaTransferulTexturii(parametri):
                         startX : endX,
                         :] = rezultat
 
-        # actualizam dimensiunea blocului pentru urmatoarea iteratie
-        dimBloc = math.floor(dimBloc/3)
+        if iteratie != nrIteratii:
+            # actualizam dimensiunea blocului pentru urmatoarea iteratie
+            dimBloc = math.floor(dimBloc/3)
+            # micsoram textura originala, pentru a avea blocuri proportionale
+            HTR = math.floor(HTR/3)
+            WTR = math.floor(WTR/3)
+            textura = cv2.resize(textura, (HTR, WTR), cv2.INTER_CUBIC)
 
     return texturaTransferata[:dimYmin, :dimXmin, :]

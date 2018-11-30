@@ -133,17 +133,21 @@ def gasesteDrumMinim(E):
     return drumMinim
 
 
-def floodFill(masca, x, y):
+def floodFillIterativ(masca, x, y):
     """Umple cu 1 partea care urmeaza sa fie scrisa"""
     dimBloc = masca.shape[0]
-    if masca[x][y] == 0:
-        masca[x][y] = 1
-        # invocam functia recursiv:
-        if x > 0:
-            floodFill(masca, x-1, y)
-        if x < dimBloc-1:
-            floodFill(masca, x+1, y)
-        if y > 0:
-            floodFill(masca, x, y-1)
-        if y < dimBloc-1:
-            floodFill(masca, x, y+1)
+    pozitii = []
+    pozitii.append((x, y))
+    while(pozitii):
+        x, y = pozitii.pop()
+        if masca[x][y] == 0:
+            masca[x][y] = 1
+            # invocam functia recursiv:
+            if x > 0:
+                pozitii.append((x-1, y))
+            if x < dimBloc-1:
+                pozitii.append((x+1, y))
+            if y > 0:
+                pozitii.append((x, y-1))
+            if y < dimBloc-1:
+                pozitii.append((x, y+1))

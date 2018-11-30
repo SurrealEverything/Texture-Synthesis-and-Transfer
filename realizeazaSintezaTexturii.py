@@ -8,10 +8,8 @@ Created on Sat Nov 24 21:17:56 2018
 import numpy as np
 import math
 from itertools import product
-from sys import setrecursionlimit, getrecursionlimit
 from functiiUtile import (genereazaBlocuri, calculeazaDistantaSuprapunere,
-                          gasesteDrumMinim, floodFill)
-
+                          gasesteDrumMinim, floodFillIterativ)
 
 
 def realizeazaSintezaTexturii(parametri):
@@ -233,15 +231,8 @@ def realizeazaSintezaTexturii(parametri):
                         if mascaSuprapunere[i, j] == 2:
                             mascaSuprapunere[i, j] = 1
 
-                # modifica limita de recursivitate
-                if parametri.recLimit != -1:
-                    current = getrecursionlimit()
-                    setrecursionlimit(parametri.recLimit)
                 # Umple cu 1 partea care urmeaza sa fie scrisa
-                floodFill(mascaSuprapunere, dimBloc-1, dimBloc-1)
-                # restabileste limita de recursivitate
-                if parametri.recLimit != -1:
-                    setrecursionlimit(current)
+                floodFillIterativ(mascaSuprapunere, dimBloc-1, dimBloc-1)
 
                 # partea de suprapus a imaginii sintetizate pana acum
                 old = texturaSintetizata[startY:endY, startX:endX, :]
